@@ -125,7 +125,7 @@ def main():
     X_test = scaler.transform(X_test)
 
     names = feats + list(ohe.get_feature_names_out(cat_cols))
-    print("Feature count (paper reports 1,097):", len(names))
+    print("Feature count(paper reports 1,097):", len(names))
     print("Train rows:", len(tr), "Test rows:", len(te))
     print("Share of Fully Paid:", round(df["y_cls"].mean(), 3))
 
