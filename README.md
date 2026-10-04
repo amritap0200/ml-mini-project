@@ -1,14 +1,6 @@
 # LendingClub Loan Default and Profitability Prediction
 
-UE24CS352A Machine Learning, Mini-Project (Reproduce and Extend)
-PES University, September to October 2026
-
-## Team
-
-- Aniyath Amrita Pradeep (PES2UG24CS919), Part 1, reproduction of the reference results
-- TEAMMATE NAME (TEAMMATE SRN), Part 2, additional model
-
-Problem statement number: ML_39
+UE24CS352A Machine Learning
 
 ## Reference
 
