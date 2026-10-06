@@ -107,7 +107,34 @@ The full tables, including per class precision and recall, are in `results/repor
 
 ## Part 2 additional model
 
-To be filled in by TEAMMATE NAME. Include the model chosen, why it was chosen, its hyperparameters, how to run `src/06_extra_model.py`, and the comparison with the reference models on the same split and metrics.
+Added by Samyak Sanklecha.
+
+**Model: Gradient Boosting** (`sklearn.ensemble.HistGradientBoostingClassifier`) on the default / fully-paid classification task.
+
+**Why this model.** Part 1 already covers a linear model (Logistic Regression), a small neural network, and bagged trees (Random Forest). Gradient boosting is the one major tabular model family not in that set, so it is the natural model to add. It also targets a clear weakness in the Part 1 results: under the 81/19 class imbalance the reference classifiers barely catch the Default class (Random Forest recalls only 6 percent of defaults, the neural network 16 percent), even though flagging defaults is the point of the task.
+
+**Hyperparameters.** `HistGradientBoostingClassifier(class_weight="balanced", random_state=42)`; all other settings are the scikit-learn defaults (learning_rate 0.1, max_iter 100, max_leaf_nodes 31). The balanced class weight is the one deliberate choice: it makes the model pay attention to the minority Default class. No extra dependency is needed, HistGradientBoosting ships with scikit-learn.
+
+**Training note.** The full 2.3 GB feature matrix does not fit alongside boosting on an 8 GB machine, so the model is trained on a random 200,000-row subsample of the training split (seed 42) and **evaluated on the full test split** — the same test rows and the same metrics as every Part 1 model, so the comparison is fair. On a machine with more RAM, set `TRAIN_SUBSAMPLE = None` in `src/06_extra_model.py` to train on all rows.
+
+**How to run.**
+
+```
+python src/06_extra_model.py
+```
+
+It loads the split from step one, trains the model, appends a `GradientBoosting` row to `results/classification_results.csv`, and prints the comparison below.
+
+**Comparison with the reference models** (test set, same split and metrics).
+
+| Model | Default recall | Default F1 | Weighted F1 | AUC |
+|---|---|---|---|---|
+| Logistic Regression | 0.670 | 0.422 | 0.697 | 0.726 |
+| Neural Network | 0.155 | 0.236 | 0.772 | 0.716 |
+| Random Forest | 0.061 | 0.111 | 0.753 | 0.722 |
+| **Gradient Boosting** | **0.669** | **0.427** | 0.703 | **0.731** |
+
+**Takeaways.** Gradient Boosting has the highest AUC (0.731), so it ranks loans best overall. It also has the best Default-class F1 (0.427) and recovers 67 percent of actual defaults, against 6 percent for Random Forest and 16 percent for the neural network. Those two reach a higher weighted F1 only by predicting Fully Paid for almost every loan, which is close to useless for flagging risky loans; Gradient Boosting keeps a competitive weighted F1 while actually catching defaults, which is what the task is about.
 
 ## Notes for reviewers
 
