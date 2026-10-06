@@ -12,15 +12,21 @@ evaluate on the FULL test split -- the same test rows and the same metrics as
 every Part 1 model, so the comparison is fair. Set TRAIN_SUBSAMPLE to None on a
 bigger machine to train on all rows.
 
+It also saves a ROC curve to figures/roc_GradientBoosting.png in the same style
+as the Part 1 classifiers.
+
 Run from the project root:
     python src/06_extra_model.py
 """
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import HistGradientBoostingClassifier
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_auc_score, roc_curve
 
-from common import PROC, RANDOM_STATE, RESULTS, cls_row, save_rows
+from common import FIGS, PROC, RANDOM_STATE, RESULTS, cls_row, save_rows
 
 NAME = "GradientBoosting"
 REPORTED_WF1 = {"LogisticRegression": 0.88, "NeuralNetwork": 0.89, "RandomForest": 0.89}
@@ -49,9 +55,23 @@ def main():
     # Evaluate on the full test split (same rows as every Part 1 model).
     y_test = np.load(PROC / "y_cls_test.npy")
     X_test = np.load(PROC / "X_test.npy", mmap_mode="r")
+    proba = model.predict_proba(X_test)[:, 1]
+    auc = roc_auc_score(y_test, proba)
     test_row = cls_row(NAME, "test", y_test, model.predict(X_test))
-    test_row["auc"] = roc_auc_score(y_test, model.predict_proba(X_test)[:, 1])
+    test_row["auc"] = auc
     save_rows("classification_results.csv", [train_row, test_row])
+
+    # ROC curve, same style as the Part 1 classifiers.
+    fpr, tpr, _ = roc_curve(y_test, proba)
+    plt.figure(figsize=(5, 5))
+    plt.plot(fpr, tpr, label=f"AUC = {auc:.2f}")
+    plt.plot([0, 1], [0, 1], "r--")
+    plt.xlabel("False Positive Rate")
+    plt.ylabel("True Positive Rate")
+    plt.title(f"ROC curve, {NAME}")
+    plt.legend(loc="lower right")
+    plt.savefig(FIGS / f"roc_{NAME}.png", dpi=150, bbox_inches="tight")
+    plt.close()
 
     # Compare with the reference classifiers on the same test split and metric.
     test = pd.read_csv(RESULTS / "classification_results.csv")
