@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LendingClub ML Mini-Project</title>
+<style>
+  :root{
+    --bg:#0f172a;
+    --panel:#ffffff;
+    --ink:#0f172a;
+    --muted:#64748b;
+    --line:#e2e8f0;
+    --brand:#4f46e5;
+    --brand-soft:#eef2ff;
+    --accent:#0d9488;
+    --good:#15803d;
+    --bad:#b91c1c;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--ink);
+    display:flex;align-items:center;justify-content:center;overflow:hidden;
+  }
+  #stage{width:100vw;height:100vh;display:flex;align-items:center;justify-content:center;padding:3vh 3vw}
+  .slide{
+    display:none;
+    width:min(1160px,95vw);height:min(700px,90vh);
+    background:var(--panel);border-radius:18px;
+    box-shadow:0 24px 60px rgba(0,0,0,.35);
+    padding:52px 60px 60px;position:relative;overflow:hidden;
+    flex-direction:column;
+  }
+  .slide.active{display:flex;animation:fade .35s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  .kicker{color:var(--brand);font-weight:700;letter-spacing:.09em;
+    text-transform:uppercase;font-size:.82rem;margin-bottom:16px}
+  h1{font-size:2.9rem;line-height:1.08;letter-spacing:-.02em}
+  h2{font-size:2.2rem;line-height:1.15;letter-spacing:-.01em;margin-bottom:6px}
+  h3{font-size:1.2rem;color:var(--muted);font-weight:600}
+  p{font-size:1.14rem;line-height:1.55;color:#1e293b}
+  .lead{font-size:1.35rem;color:#334155}
+
+  /* main content fills the vertical space */
+  .body{flex:1;display:flex;flex-direction:column;justify-content:center;min-height:0}
+  .body.top{justify-content:flex-start;padding-top:8px}
+
+  ul{list-style:none}
+  li{font-size:1.24rem;line-height:1.5;padding:14px 0 14px 34px;position:relative;color:#1e293b}
+  li::before{content:"";position:absolute;left:4px;top:24px;width:11px;height:11px;
+    border-radius:3px;background:var(--brand)}
+  li b{color:var(--ink)}
+
+  .center{align-items:center;justify-content:center;text-align:center}
+  .center h1{margin-bottom:18px}
+  .divider{background:linear-gradient(135deg,#4f46e5,#0d9488);color:#fff}
+  .divider .kicker{color:#c7d2fe}
+  .divider h1{color:#fff}
+  .divider p{color:#e0e7ff}
+  .partnum{font-size:7rem;font-weight:800;color:rgba(255,255,255,.22);line-height:1;margin-bottom:4px}
+  .chips{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:24px}
+  .chips span{background:rgba(255,255,255,.16);color:#fff;font-weight:600;
+    font-size:1rem;padding:9px 18px;border-radius:999px}
+
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+  .three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:22px}
+  .card{background:#f8fafc;border:1px solid var(--line);border-radius:14px;padding:26px 28px;
+    display:flex;flex-direction:column}
+  .card h4{font-size:.9rem;text-transform:uppercase;letter-spacing:.06em;color:var(--brand);margin-bottom:12px}
+  .card p{font-size:1.1rem}
+  .card .big{font-size:2.4rem;font-weight:800;color:var(--ink)}
+  .card .cap{font-size:.95rem;color:var(--muted);margin-top:4px}
+  .icon{font-size:2rem;margin-bottom:10px}
+
+  .stats{display:flex;gap:22px}
+  .stat{background:var(--brand-soft);border-radius:14px;padding:24px 26px;flex:1;text-align:center}
+  .stat .n{font-size:2.6rem;font-weight:800;color:var(--brand);line-height:1}
+  .stat .l{font-size:1rem;color:#475569;margin-top:8px}
+
+  table{border-collapse:collapse;width:100%;font-size:1.18rem}
+  th,td{padding:17px 14px;text-align:center;border-bottom:1px solid var(--line)}
+  th{background:#f1f5f9;color:#334155;font-size:.9rem;text-transform:uppercase;letter-spacing:.04em}
+  td:first-child,th:first-child{text-align:left}
+  tr.hl td{background:var(--brand-soft);font-weight:700;color:var(--ink)}
+  .good{color:var(--good);font-weight:700}
+  .bad{color:var(--bad);font-weight:700}
+
+  .bars{display:flex;flex-direction:column;gap:22px}
+  .bar-row{display:grid;grid-template-columns:180px 1fr 70px;align-items:center;gap:18px}
+  .bar-row .name{font-size:1.18rem;color:#334155;font-weight:600}
+  .track{background:#eef2f6;border-radius:9px;height:40px;overflow:hidden}
+  .fill{height:100%;border-radius:9px;transition:width .6s ease}
+  .fill.lo{background:#f87171}
+  .fill.mid{background:#fbbf24}
+  .fill.hi{background:var(--brand)}
+  .bar-row .val{font-weight:800;font-size:1.3rem;text-align:right}
+
+  .note{margin-top:22px;font-size:1.05rem;color:#475569;
+    border-left:4px solid var(--brand);padding:14px 18px;background:#f8fafc;border-radius:0 10px 10px 0}
+  .note b{color:var(--ink)}
+
+  .pill{display:inline-block;background:var(--brand-soft);color:var(--brand);
+    font-weight:700;font-size:1rem;padding:8px 18px;border-radius:999px;margin-top:10px}
+
+  #bar{position:fixed;top:0;left:0;height:4px;background:var(--brand);width:0;transition:width .3s ease;z-index:10}
+  #count{position:fixed;bottom:16px;right:22px;color:#94a3b8;font-size:.85rem;font-variant-numeric:tabular-nums;z-index:10}
+  #hint{position:fixed;bottom:16px;left:22px;color:#64748b;font-size:.8rem;z-index:10}
+  code{background:#eef2ff;padding:2px 8px;border-radius:5px;font-size:.92em;color:#4338ca;font-weight:600}
+  @media (max-width:640px){
+    .slide{padding:30px 26px 40px}
+    h1{font-size:2rem}h2{font-size:1.5rem}p{font-size:1rem}li{font-size:1.05rem}
+    .two,.three{grid-template-columns:1fr;gap:14px}
+    .stats{flex-direction:column;gap:12px}
+    .bar-row{grid-template-columns:100px 1fr 52px;gap:10px}
+    table{font-size:1rem}th,td{padding:11px 8px}
+  }
+</style>
+</head>
+<body>
+<div id="bar"></div>
+<div id="stage">
+
+  <!-- 1 TITLE -->
+  <section class="slide active center">
+    <div class="kicker">UE24CS352A · Machine Learning Mini-Project</div>
+    <h1>LendingClub Loan Default<br>&amp; Profitability Prediction</h1>
+    <p class="lead" style="margin-top:16px">Reproducing a Stanford study — then adding a model of our own</p>
+    <span class="pill">Amrita Pradeep — Part 1 &nbsp;·&nbsp; Samyak Sanklecha — Part 2</span>
+    <p style="margin-top:26px;color:#94a3b8;font-size:1rem">Reference: Peiqian Li &amp; Gao Han, Stanford University</p>
+  </section>
+
+  <!-- 2 PROBLEM -->
+  <section class="slide">
+    <div class="kicker">The Problem</div>
+    <h2>Can we tell a good loan from a bad one — before it is funded?</h2>
+    <div class="body">
+      <div class="two">
+        <div class="card">
+          <div class="icon">🎯</div>
+          <h4>Classification</h4>
+          <p>Will this loan be <b>fully paid</b>, or <b>default</b>? A yes/no risk flag on every application.</p>
+        </div>
+        <div class="card">
+          <div class="icon">📈</div>
+          <h4>Regression</h4>
+          <p>What <b>return</b> will it earn? We predict the net annualized return (NAR) of each loan.</p>
+        </div>
+        <div class="card">
+          <div class="icon">💰</div>
+          <h4>Strategy</h4>
+          <p>Invest <b>only</b> in loans predicted to pay well — then measure the <b>real</b> return we'd have earned.</p>
+        </div>
+        <div class="card" style="background:var(--brand-soft);border-color:#c7d2fe">
+          <div class="icon">🔒</div>
+          <h4>The honest rule</h4>
+          <p>Use <b>only features known when the loan is issued</b> — no payment history — so the model can never peek at the future.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 DATASET -->
+  <section class="slide">
+    <div class="kicker">The Dataset</div>
+    <h2>LendingClub accepted loans (Kaggle)</h2>
+    <div class="body">
+      <div class="stats">
+        <div class="stat"><div class="n">786,820</div><div class="l">loans · 2012–2015 · final status</div></div>
+        <div class="stat"><div class="n">1,110</div><div class="l">features after encoding</div></div>
+        <div class="stat"><div class="n">70 / 30</div><div class="l">train / test split · seed 42</div></div>
+      </div>
+      <ul style="margin-top:28px">
+        <li><b>Label:</b> Fully Paid = 1 &nbsp;·&nbsp; Charged Off / Default = 0</li>
+        <li><b>The catch — class imbalance:</b> <b>81%</b> of loans are Fully Paid, only <b>19%</b> ever default</li>
+      </ul>
+      <div class="note"><b>Remember this 81 / 19 split</b> — it is the single fact that drives every result in this presentation.</div>
+    </div>
+  </section>
+
+  <!-- 4 PIPELINE -->
+  <section class="slide">
+    <div class="kicker">The Approach</div>
+    <h2>One shared, leakage-safe pipeline</h2>
+    <div class="body">
+      <div class="two">
+        <div class="card">
+          <h4>Preparing the data</h4>
+          <p>Drop columns that are empty, constant, or leak the outcome → fill missing values → one-hot encode categories → scale every feature.</p>
+        </div>
+        <div class="card">
+          <h4>Keeping it fair</h4>
+          <p>Everything is <b>fit on the training rows only</b>. The <b>same</b> train/test rows are reused by every model, with a fixed seed of <b>42</b>.</p>
+        </div>
+      </div>
+      <div class="note">Both parts call the <b>same</b> preprocessing and the <b>same</b> metric code (<code>src/common.py</code>) — so Part 1 and Part 2 are measured on an identical footing.</div>
+    </div>
+  </section>
+
+  <!-- 5 PART 1 DIVIDER -->
+  <section class="slide divider center">
+    <div class="partnum">01</div>
+    <div class="kicker">Part 1 — Amrita Pradeep</div>
+    <h1>Reproducing the reference</h1>
+    <div class="chips"><span>3 classifiers</span><span>6 regressors</span><span>Loan-selection strategy</span></div>
+  </section>
+
+  <!-- 6 PART1 CLASSIFICATION MODELS -->
+  <section class="slide">
+    <div class="kicker">Part 1 · Classification</div>
+    <h2>Three standard models, exactly as in the paper</h2>
+    <div class="body">
+      <div class="three">
+        <div class="card">
+          <div class="icon">📏</div>
+          <h4>Logistic Regression</h4>
+          <p>A simple linear baseline — fast and interpretable.</p>
+        </div>
+        <div class="card">
+          <div class="icon">🧠</div>
+          <h4>Neural Network</h4>
+          <p>A small multi-layer network (Adam) that learns non-linear patterns.</p>
+        </div>
+        <div class="card">
+          <div class="icon">🌲</div>
+          <h4>Random Forest</h4>
+          <p>100 bagged decision trees — usually the strongest on tabular data.</p>
+        </div>
+      </div>
+      <div class="note">All three predict <b>Fully Paid vs Default</b> and are scored with the same metrics as the reference, on the same test split.</div>
+    </div>
+  </section>
+
+  <!-- 7 PART1 CLASSIFICATION RESULTS -->
+  <section class="slide">
+    <div class="kicker">Part 1 · Classification results (test set)</div>
+    <h2>Good overall accuracy — but a hidden problem</h2>
+    <div class="body top">
+      <table>
+        <tr><th>Model</th><th>Weighted F1</th><th>Default recall</th><th>AUC</th></tr>
+        <tr><td>Logistic Regression</td><td>0.697</td><td class="good">0.670</td><td>0.726</td></tr>
+        <tr><td>Neural Network</td><td>0.772</td><td class="bad">0.155</td><td>0.716</td></tr>
+        <tr><td>Random Forest</td><td>0.753</td><td class="bad">0.061</td><td>0.722</td></tr>
+      </table>
+      <div class="note"><b>The weakness:</b> the Random Forest &amp; neural network score a high weighted F1 by almost always predicting "Fully Paid." They catch only <b>6%</b> and <b>16%</b> of real defaults — useless for the one thing the task is about.</div>
+    </div>
+  </section>
+
+  <!-- 8 PART1 REGRESSION + STRATEGY -->
+  <section class="slide">
+    <div class="kicker">Part 1 · Regression &amp; strategy</div>
+    <h2>Predicting the return is much harder</h2>
+    <div class="body">
+      <div class="two">
+        <div class="card">
+          <h4>Regression — net annualized return</h4>
+          <p>Six models (Linear, Ridge, Neural Network, Random Forest at depths 4 / 8 / 10). Best test <b>R² ≈ 0.03</b> — far below the reference's ~0.31.</p>
+          <p style="margin-top:10px;color:var(--muted);font-size:1rem">Returns are simply too noisy to predict well from application data alone.</p>
+        </div>
+        <div class="card">
+          <h4>Loan-selection strategy</h4>
+          <p>Invest only in loans whose predicted return clears a threshold. Our threshold selects ~<b>11%</b> of test loans at a mean actual return of ~<b>6%</b>.</p>
+          <p style="margin-top:10px;color:var(--muted);font-size:1rem">A simple, rule-based way to turn predictions into decisions.</p>
+        </div>
+      </div>
+      <div class="note"><b>Honest takeaway:</b> classification reproduces well; <b>regression does not</b> — a known limit of this public dataset snapshot.</div>
+    </div>
+  </section>
+
+  <!-- 9 PART 2 DIVIDER -->
+  <section class="slide divider center">
+    <div class="partnum">02</div>
+    <div class="kicker">Part 2 — Samyak Sanklecha</div>
+    <h1>An additional model</h1>
+    <div class="chips"><span>Gradient Boosting</span><span>Balanced class weights</span><span>Fixes the blind spot</span></div>
+  </section>
+
+  <!-- 10 PART2 THE GAP -->
+  <section class="slide">
+    <div class="kicker">Part 2 · The gap</div>
+    <h2>Two gaps in Part 1 — and one model that closes both</h2>
+    <div class="body">
+      <div class="two">
+        <div class="card">
+          <div class="icon">🧩</div>
+          <h4>A missing model family</h4>
+          <p>Part 1 has a linear model, a neural net and bagged trees — but <b>no boosting</b>, the other major tabular approach.</p>
+        </div>
+        <div class="card">
+          <div class="icon">⚠️</div>
+          <h4>The collapsed Default recall</h4>
+          <p>The best trees caught just <b>6%</b> of defaults. The 81 / 19 imbalance was never actually addressed.</p>
+        </div>
+      </div>
+      <div class="note">One choice closes both at once: <b>Gradient Boosting with balanced class weights.</b></div>
+    </div>
+  </section>
+
+  <!-- 11 PART2 MODEL -->
+  <section class="slide">
+    <div class="kicker">Part 2 · The model</div>
+    <h2>Gradient Boosting <span style="color:var(--muted);font-size:1.3rem">(HistGradientBoosting)</span></h2>
+    <div class="body">
+      <div class="two">
+        <div>
+          <ul>
+            <li>Builds trees <b>sequentially</b> — each new tree fixes the errors the last one made</li>
+            <li><code>class_weight="balanced"</code> — the one deliberate choice, so the model stops ignoring the 19% minority</li>
+            <li>Otherwise scikit-learn defaults — <b>no new dependency</b></li>
+          </ul>
+        </div>
+        <div class="card" style="justify-content:center">
+          <h4>Same rules as Part 1</h4>
+          <p>Same split, same metrics, evaluated on the <b>full test set</b>.</p>
+          <p style="margin-top:12px;font-size:1rem;color:var(--muted)">On an 8&nbsp;GB laptop the full matrix won't fit, so training uses a 200k-row sample — but testing is on <b>every</b> test loan, so the comparison stays fair.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 12 PART2 RESULTS (bar chart) -->
+  <section class="slide">
+    <div class="kicker">Part 2 · Results — defaults actually caught (test set)</div>
+    <h2>Default recall: who catches the real defaults?</h2>
+    <div class="body">
+      <div class="bars">
+        <div class="bar-row"><span class="name">Random Forest</span>
+          <div class="track"><div class="fill lo" style="width:6.1%"></div></div><span class="val bad">6%</span></div>
+        <div class="bar-row"><span class="name">Neural Network</span>
+          <div class="track"><div class="fill lo" style="width:15.5%"></div></div><span class="val bad">16%</span></div>
+        <div class="bar-row"><span class="name">Logistic Reg.</span>
+          <div class="track"><div class="fill mid" style="width:67%"></div></div><span class="val">67%</span></div>
+        <div class="bar-row"><span class="name">Gradient Boosting</span>
+          <div class="track"><div class="fill hi" style="width:66.9%"></div></div><span class="val good">67%</span></div>
+      </div>
+      <div class="note"><b>Gradient Boosting recovers 67% of defaults</b> — on par with Logistic Regression, and roughly <b>10×</b> the Random Forest. The imbalance problem is fixed.</div>
+    </div>
+  </section>
+
+  <!-- 13 PART2 FULL TABLE -->
+  <section class="slide">
+    <div class="kicker">Part 2 · Full comparison (test set)</div>
+    <h2>Best where it counts</h2>
+    <div class="body top">
+      <table>
+        <tr><th>Model</th><th>Default recall</th><th>Default F1</th><th>Weighted F1</th><th>AUC</th></tr>
+        <tr><td>Logistic Regression</td><td>0.670</td><td>0.422</td><td>0.697</td><td>0.726</td></tr>
+        <tr><td>Neural Network</td><td>0.155</td><td>0.236</td><td>0.772</td><td>0.716</td></tr>
+        <tr><td>Random Forest</td><td>0.061</td><td>0.111</td><td>0.753</td><td>0.722</td></tr>
+        <tr class="hl"><td>Gradient Boosting</td><td>0.669</td><td>0.427</td><td>0.703</td><td>0.731</td></tr>
+      </table>
+      <div class="note">Gradient Boosting has the <b>highest AUC (0.731)</b> and the <b>best Default-F1 (0.427)</b> of all four. The RF and NN only "win" weighted F1 by predicting Fully Paid for nearly everything.</div>
+    </div>
+  </section>
+
+  <!-- 14 CONCLUSION -->
+  <section class="slide">
+    <div class="kicker">Conclusion</div>
+    <h2>What we showed</h2>
+    <div class="body">
+      <ul>
+        <li><b>Part 1</b> reproduced the reference classifiers and exposed a real weakness: class imbalance hides a poor Default recall.</li>
+        <li><b>Part 2</b> added Gradient Boosting with balanced weights — best AUC, best Default-F1, and it actually catches <b>67%</b> of defaults.</li>
+        <li>We kept every comparison <b>fair and honest</b> — same split, same metrics — and reported where regression fell short.</li>
+      </ul>
+      <div class="note"><b>Repo:</b> <code>github.com/amritap0200/ml-mini-project</code> — Part 1 in scripts 01–05, Part 2 in <code>src/06_extra_model.py</code>.</div>
+    </div>
+  </section>
+
+  <!-- 15 THANKS -->
+  <section class="slide divider center">
+    <div class="kicker">UE24CS352A · Machine Learning</div>
+    <h1>Thank you</h1>
+    <p class="lead" style="margin-top:14px;color:#e0e7ff">Questions &amp; live demo</p>
+    <span class="pill" style="background:rgba(255,255,255,.16);color:#fff;margin-top:20px">Amrita Pradeep &nbsp;·&nbsp; Samyak Sanklecha</span>
+  </section>
+
+</div>
+
+<div id="count">1 / 15</div>
+<div id="hint">← → navigate · F fullscreen</div>
+
+<script>
+  const slides=[...document.querySelectorAll('.slide')];
+  let i=0;
+  const bar=document.getElementById('bar');
+  const count=document.getElementById('count');
+  function show(n){
+    i=Math.max(0,Math.min(slides.length-1,n));
+    slides.forEach((s,k)=>s.classList.toggle('active',k===i));
+    bar.style.width=((i+1)/slides.length*100)+'%';
+    count.textContent=(i+1)+' / '+slides.length;
+  }
+  function next(){show(i+1)}
+  function prev(){show(i-1)}
+  document.addEventListener('keydown',e=>{
+    if(['ArrowRight',' ','PageDown'].includes(e.key)){e.preventDefault();next()}
+    else if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();prev()}
+    else if(e.key==='Home'){show(0)}
+    else if(e.key==='End'){show(slides.length-1)}
+    else if(e.key.toLowerCase()==='f'){
+      if(!document.fullscreenElement){document.documentElement.requestFullscreen?.()}
+      else{document.exitFullscreen?.()}
+    }
+  });
+  document.getElementById('stage').addEventListener('click',e=>{
+    (e.clientX>window.innerWidth/2)?next():prev();
+  });
+  show(0);
+</script>
+</body>
+</html>
